@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from xgboost import XGBClassifier
+import xgboost as xgb
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "models" / "fraud_xgboost.json"
@@ -13,7 +13,7 @@ FEATURE_NAMES = [
     "is_overnight",
 ]
 
-model = XGBClassifier()
+model = xgb.Booster()
 model.load_model(MODEL_PATH)
 
 
@@ -61,8 +61,9 @@ def score_transaction(tx: dict) -> dict:
         [[features[feature_name] for feature_name in FEATURE_NAMES]]
     )
 
-    risk_score = float(model.predict_proba(values)[0][1])
-    risk_score = round(risk_score, 2)
+   matrix = xgb.DMatrix(values, feature_names=FEATURE_NAMES)
+   risk_score = float(model.predict(matrix)[0])
+   risk_score = round(risk_score, 2)
 
     verified_features = get_verified_features(tx, features)
     flagged = risk_score >= 0.50
