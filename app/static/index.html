@@ -1,287 +1,1104 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZGuard | Fraud Analyst Console</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZGuard | Fraud Risk Console</title>
+
   <style>
     :root {
-      --bg: #07111f;
-      --panel: #0e1b2e;
-      --border: #263a55;
-      --text: #eaf2ff;
-      --muted: #9dafc7;
-      --blue: #41a7ff;
-      --red: #ff5c70;
-      --green: #45d89b;
-      --amber: #ffbc4d;
+      --navy: #071b38;
+      --blue: #1676d2;
+      --canvas: #f4f7fb;
+      --surface: #ffffff;
+      --ink: #122440;
+      --muted: #607089;
+      --line: #dce5f0;
+      --soft: #eaf5ff;
+      --green: #087f5b;
+      --red: #c22d45;
+      --amber: #b66b00;
     }
 
-    * { box-sizing: border-box; }
+    body.dark {
+      --navy: #06162c;
+      --blue: #5eb4ff;
+      --canvas: #0a1728;
+      --surface: #102139;
+      --ink: #eaf2fc;
+      --muted: #a6b6cb;
+      --line: #29405f;
+      --soft: #142844;
+      --green: #58d5a4;
+      --red: #ff8b9a;
+      --amber: #ffd06a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      color: var(--text);
-      background: radial-gradient(circle at top right, #16335a, var(--bg) 45%);
-      font-family: Inter, Arial, sans-serif;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: Arial, sans-serif;
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 22px 7%;
-      border-bottom: 1px solid var(--border);
-    }
-
-    h1 { margin: 0; font-size: 24px; }
-    .subtitle, .small { color: var(--muted); }
-    .badge {
-      color: var(--green);
-      background: #102f2a;
-      border: 1px solid #27735f;
-      border-radius: 20px;
-      padding: 8px 12px;
-      font-size: 13px;
-    }
-
-    main {
-      width: min(1100px, 90%);
-      margin: 35px auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 22px;
-    }
-
-    .card {
-      background: rgba(14, 27, 46, 0.92);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 25px;
-    }
-
-    h2 { margin-top: 0; font-size: 19px; }
-    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-    label {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-
-    input, select {
-      width: 100%;
-      background: #081321;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 11px;
-    }
-
-    .check-row {
-      margin: 17px 0;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      color: var(--muted);
-      font-size: 14px;
+    button,
+    input,
+    select {
+      font: inherit;
     }
 
     button {
-      width: 100%;
-      border: 0;
-      border-radius: 8px;
-      padding: 13px;
-      background: linear-gradient(90deg, #2e8fe4, #41a7ff);
-      color: white;
-      font-size: 15px;
-      font-weight: bold;
       cursor: pointer;
     }
 
-    .empty {
-      color: var(--muted);
-      text-align: center;
-      padding: 80px 15px;
+    .hidden {
+      display: none !important;
     }
 
-    .result { display: none; }
-    .risk {
+    .login {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      position: relative;
+      background: linear-gradient(
+        120deg,
+        var(--navy) 0%,
+        var(--navy) 52%,
+        var(--canvas) 52%
+      );
+    }
+
+    .login-theme {
+      position: absolute;
+      top: 22px;
+      right: 26px;
+      z-index: 3;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 8px 12px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .login-intro {
+      padding: 12vh 10%;
+      color: white;
+    }
+
+    .login-intro h1 {
       font-size: 52px;
-      font-weight: bold;
-      margin: 12px 0 5px;
+      max-width: 560px;
     }
 
-    .status {
-      display: inline-block;
-      padding: 7px 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      margin-bottom: 20px;
+    .login-intro p {
+      max-width: 540px;
+      line-height: 1.6;
+      color: #d8e7f8;
     }
 
-    .flagged { background: #49212a; color: var(--red); }
-    .safe { background: #123429; color: var(--green); }
-
-    .reason {
-      margin: 10px 0;
-      padding: 12px;
-      border-left: 3px solid var(--amber);
-      background: #152339;
-      color: #d9e6f7;
-      font-size: 14px;
+    .login-card {
+      width: min(420px, 88%);
+      align-self: center;
+      margin: auto;
+      padding: 36px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
     }
 
-    .explanation {
-      margin-top: 20px;
-      background: #091525;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 14px;
-      line-height: 1.5;
-      color: #d9e6f7;
-    }
-
-    footer {
-      width: min(1100px, 90%);
-      margin: 0 auto 30px;
+    label {
+      display: block;
+      margin: 16px 0 7px;
       color: var(--muted);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .primary-button,
+    .secondary-button {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .primary-button {
+      width: 100%;
+      margin-top: 22px;
+      border: 0;
+      background: var(--blue);
+      color: white;
+    }
+
+    .secondary-button {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .error {
+      min-height: 20px;
+      margin-top: 12px;
+      color: var(--red);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+    }
+
+    .sidebar {
+      padding: 24px 16px;
+      background: var(--navy);
+      color: white;
+    }
+
+    .brand {
+      margin-bottom: 26px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .nav-button {
+      width: 100%;
+      margin: 4px 0;
+      padding: 12px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #c6d8ed;
+      text-align: left;
+    }
+
+    .nav-button.active,
+    .nav-button:hover {
+      background: #1a3d69;
+      color: white;
+    }
+
+    .sidebar-footer {
+      position: absolute;
+      bottom: 22px;
+      color: #c6d8ed;
       font-size: 12px;
     }
 
-    @media (max-width: 760px) {
-      main { grid-template-columns: 1fr; }
-      .field-grid { grid-template-columns: 1fr; }
+    .text-button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 72px;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .icon-button {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .page {
+      max-width: 1380px;
+      margin: auto;
+      padding: 32px;
+    }
+
+    .view h1 {
+      margin: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .metrics,
+    .workspace,
+    .feature-grid,
+    .profile-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(3, 1fr);
+      margin: 22px 0;
+    }
+
+    .workspace {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .feature-grid,
+    .profile-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .metric,
+    .panel,
+    .insight-card,
+    .profile-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 25px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 14px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .checkbox-row input {
+      width: auto;
+    }
+
+    .result-empty {
+      min-height: 330px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .status {
+      margin: 16px 0;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .flagged {
+      color: var(--red);
+    }
+
+    .safe {
+      color: var(--green);
+    }
+
+    .signal {
+      margin-top: 10px;
+      padding: 10px;
+      border-left: 3px solid var(--amber);
+      background: var(--soft);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 20px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 13px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      color: var(--muted);
+    }
+
+    .empty-state {
+      margin-top: 20px;
+      padding: 30px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .assistant {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+    }
+
+    .chat-toggle {
+      float: right;
+      width: 55px;
+      height: 55px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--navy);
+      color: white;
+      font-size: 22px;
+    }
+
+    .chat-window {
+      display: none;
+      flex-direction: column;
+      width: 360px;
+      height: 460px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+
+    .chat-window.open {
+      display: flex;
+    }
+
+    .chat-header {
+      padding: 15px;
+      background: var(--navy);
+      color: white;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .bubble {
+      max-width: 85%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 9px;
+      font-size: 13px;
+    }
+
+    .bot-message {
+      background: var(--soft);
+    }
+
+    .user-message {
+      margin-left: auto;
+      background: var(--blue);
+      color: white;
+    }
+
+    .chat-form {
+      display: flex;
+      gap: 7px;
+      padding: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .chat-form button {
+      width: 45px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--blue);
+      color: white;
+    }
+
+    @media (max-width: 850px) {
+      .login,
+      .app-shell,
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .login-intro,
+      .sidebar {
+        display: none;
+      }
+
+      .metrics,
+      .form-grid,
+      .feature-grid,
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
-  <header>
-    <div>
-      <h1>ZGuard Fraud Analyst Console</h1>
-      <div class="subtitle">Explainable real-time card fraud detection</div>
+  <section id="loginScreen" class="login">
+    <button id="loginThemeButton" class="login-theme" type="button" onclick="toggleTheme()">
+      ☾ Dark mode
+    </button>
+
+    <div class="login-intro">
+      <div class="brand">ZGUARD</div>
+      <h1>Fraud decisions you can trust.</h1>
+      <p>
+        Real-time, explainable card fraud detection running in the IBM LinuxONE
+        environment.
+      </p>
     </div>
-    <div class="badge">● Running on IBM LinuxONE</div>
-  </header>
 
-  <main>
-    <section class="card">
-      <h2>Score a transaction</h2>
+    <form id="loginForm" class="login-card">
+      <h2>Welcome back</h2>
+      <p class="subtitle">Sign in to the fraud operations workspace.</p>
 
-      <div class="field-grid">
-        <div>
-          <label>Card ID</label>
-          <input id="card_id" value="CARD-001" />
+      <label for="personalId">PERSONAL ID</label>
+      <input id="personalId" value="analyst01" required>
+
+      <label for="password">PASSWORD</label>
+      <input id="password" type="password" value="ZGuard2026!" required>
+
+      <button class="primary-button" type="submit">Sign in securely</button>
+      <div id="loginError" class="error"></div>
+    </form>
+  </section>
+
+  <section id="appShell" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">ZGUARD</div>
+
+      <button class="nav-button active" data-view="analysis">▦ Transaction review</button>
+      <button class="nav-button" data-view="alerts">◷ Alert queue</button>
+      <button class="nav-button" data-view="insights">◫ Model insights</button>
+      <button class="nav-button" data-view="profile">◉ User profile</button>
+      <button class="nav-button" type="button" onclick="openChat()">✦ Guidance assistant</button>
+
+      <div class="sidebar-footer">
+        IBM LinuxONE · s390x<br><br>
+        <button class="text-button" type="button" onclick="logout()">Sign out</button>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div id="breadcrumb">Workspace / Transaction review</div>
+
+        <div class="top-actions">
+          <button id="dashboardThemeButton" class="icon-button" type="button" onclick="toggleTheme()">
+            ☾
+          </button>
+
+          <div id="userCopy"></div>
         </div>
-        <div>
-          <label>Amount (₹)</label>
-          <input id="amount" type="number" value="2500" />
-        </div>
-        <div>
-          <label>Merchant</label>
-          <input id="merchant" value="Unknown Electronics Store" />
-        </div>
-        <div>
-          <label>Country</label>
-          <input id="country" value="IN" />
-        </div>
-        <div>
-          <label>Transaction hour (0–23)</label>
-          <input id="hour" type="number" min="0" max="23" value="2" />
-        </div>
-        <div>
-          <label>Transactions in last 10 minutes</label>
-          <input id="transaction_count" type="number" value="5" />
-        </div>
-        <div>
-          <label>Cardholder average amount (₹)</label>
-          <input id="average_amount" type="number" value="120" />
+      </header>
+
+      <div class="page">
+        <section id="analysisView" class="view">
+          <h1>Transaction review</h1>
+          <p class="subtitle">Score card activity and receive verified explanations.</p>
+
+          <div class="metrics">
+            <div class="metric">
+              Detection engine
+              <strong>XGBoost</strong>
+            </div>
+            <div class="metric">
+              Decision threshold
+              <strong>50%</strong>
+            </div>
+            <div class="metric">
+              Explanation integrity
+              <strong>Verified</strong>
+            </div>
+          </div>
+
+          <div class="workspace">
+            <section class="panel">
+              <h3>Transaction details</h3>
+
+              <form id="scoreForm">
+                <div class="form-grid">
+                  <div>
+                    <label for="cardId">CARD ID</label>
+                    <input id="cardId" value="CARD-001" required>
+                  </div>
+
+                  <div>
+                    <label for="amount">AMOUNT (₹)</label>
+                    <input id="amount" type="number" value="2500" required>
+                  </div>
+
+                  <div>
+                    <label for="merchant">MERCHANT</label>
+                    <input id="merchant" value="Unknown Electronics Store" required>
+                  </div>
+
+                  <div>
+                    <label for="country">COUNTRY</label>
+                    <input id="country" value="IN" required>
+                  </div>
+
+                  <div>
+                    <label for="hour">TRANSACTION HOUR</label>
+                    <input id="hour" type="number" min="0" max="23" value="2" required>
+                  </div>
+
+                  <div>
+                    <label for="transactionCount">TRANSACTIONS IN LAST 10 MIN</label>
+                    <input id="transactionCount" type="number" value="5" required>
+                  </div>
+
+                  <div>
+                    <label for="averageAmount">AVERAGE CARD AMOUNT (₹)</label>
+                    <input id="averageAmount" type="number" value="120" required>
+                  </div>
+                </div>
+
+                <div class="checkbox-row">
+                  <input id="newMerchant" type="checkbox" checked>
+                  <label for="newMerchant">New merchant for this cardholder</label>
+                </div>
+
+                <button id="scoreButton" class="primary-button" type="submit">
+                  Analyse transaction
+                </button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <h3>Decision summary</h3>
+
+              <div id="resultEmpty" class="result-empty">
+                Submit a transaction to see the risk decision.
+              </div>
+
+              <div id="resultCard" class="hidden">
+                <div id="resultStatus" class="status"></div>
+                <div id="riskScore"></div>
+                <p id="resultMeta" class="subtitle"></p>
+
+                <h4>Verified risk signals</h4>
+                <div id="signals"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="alertsView" class="view hidden">
+          <h1>Alert queue</h1>
+          <p class="subtitle">Flagged transactions awaiting analyst review.</p>
+
+          <div id="alertsEmpty" class="empty-state">
+            No fraud alerts are awaiting review.
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Alert</th>
+                  <th>Card</th>
+                  <th>Merchant</th>
+                  <th>Amount</th>
+                  <th>Risk</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="alertsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="insightsView" class="view hidden">
+          <h1>Model insights</h1>
+          <p class="subtitle">Verified information about the active fraud model.</p>
+          <div id="modelInsightsContent"></div>
+        </section>
+
+        <section id="profileView" class="view hidden">
+          <h1>User profile</h1>
+          <p class="subtitle">Manage permitted analyst profile details.</p>
+
+          <form id="profileForm" class="profile-card">
+            <div class="profile-grid">
+              <div>
+                <label for="profileDisplayName">DISPLAY NAME</label>
+                <input id="profileDisplayName" disabled>
+              </div>
+
+              <div>
+                <label for="profilePersonalId">PERSONAL ID</label>
+                <input id="profilePersonalId" disabled>
+              </div>
+
+              <div>
+                <label for="profileRole">ROLE</label>
+                <input id="profileRole" disabled>
+              </div>
+
+              <div>
+                <label for="profileTeam">TEAM</label>
+                <input id="profileTeam" disabled>
+              </div>
+            </div>
+
+            <button id="editProfileButton" class="secondary-button" type="button">
+              Edit profile
+            </button>
+
+            <button id="saveProfileButton" class="primary-button hidden" type="submit">
+              Save changes
+            </button>
+          </form>
+        </section>
+      </div>
+    </main>
+  </section>
+
+  <aside class="assistant">
+    <div id="chatWindow" class="chat-window">
+      <div class="chat-header">
+        <b>Zia · Guidance assistant</b>
+      </div>
+
+      <div id="messages" class="messages">
+        <div class="bubble bot-message">
+          Hi, I’m Zia. Ask me about scoring, alerts, insights, or your profile.
         </div>
       </div>
 
-      <div class="check-row">
-        <input id="new_merchant" type="checkbox" checked />
-        <label for="new_merchant">New merchant for this cardholder</label>
-      </div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" placeholder="Ask Zia..." required>
+        <button type="submit">↑</button>
+      </form>
+    </div>
 
-      <button onclick="scoreTransaction()">Analyse transaction</button>
-    </section>
-
-    <section class="card">
-      <div id="empty" class="empty">
-        Submit a transaction to receive a verified, analyst-ready explanation.
-      </div>
-
-      <div id="result" class="result">
-        <div class="small">XGBoost fraud risk score</div>
-        <div id="risk" class="risk"></div>
-        <div id="status" class="status"></div>
-
-        <h2>Verified risk signals</h2>
-        <div id="reasons"></div>
-
-        <div class="explanation">
-          <strong>Analyst explanation</strong>
-          <div id="explanation" style="margin-top: 8px;"></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    Sensitive transaction data remains inside the LinuxONE trust boundary. Explanations are limited to verified model input features.
-  </footer>
+    <button class="chat-toggle" type="button" onclick="toggleChat()">✦</button>
+  </aside>
 
   <script>
-    async function scoreTransaction() {
-      const button = document.querySelector("button");
-      button.textContent = "Analysing...";
-      button.disabled = true;
+    let token = localStorage.getItem("zguard_token");
+    let user = JSON.parse(localStorage.getItem("zguard_user") || "null");
+    let profileEditing = false;
 
-      const payload = {
-        card_id: document.getElementById("card_id").value,
-        amount: Number(document.getElementById("amount").value),
-        merchant: document.getElementById("merchant").value,
-        country: document.getElementById("country").value,
-        hour: Number(document.getElementById("hour").value),
-        transactions_last_10_min: Number(document.getElementById("transaction_count").value),
-        average_card_amount: Number(document.getElementById("average_amount").value),
-        is_new_merchant: document.getElementById("new_merchant").checked
+    const byId = (id) => document.getElementById(id);
+
+    function authHeaders() {
+      return {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
       };
-
-      try {
-        const response = await fetch("/score-transaction", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        document.getElementById("empty").style.display = "none";
-        document.getElementById("result").style.display = "block";
-        document.getElementById("risk").textContent =
-          `${Math.round(data.fraud_risk_score * 100)}%`;
-
-        const status = document.getElementById("status");
-        status.textContent = data.flagged ? "FLAGGED FOR REVIEW" : "NO ALERT";
-        status.className = `status ${data.flagged ? "flagged" : "safe"}`;
-
-        document.getElementById("reasons").innerHTML =
-          data.top_verified_features.length
-            ? data.top_verified_features.map(reason =>
-                `<div class="reason">${reason}</div>`).join("")
-            : "<div class='small'>No high-risk feature signals were detected.</div>";
-
-        document.getElementById("explanation").textContent =
-          data.analyst_explanation;
-      } catch (error) {
-        alert("Unable to reach the fraud API. Check that the LinuxONE service is running.");
-      } finally {
-        button.textContent = "Analyse transaction";
-        button.disabled = false;
-      }
     }
+
+    function syncThemeButtons() {
+      const darkMode = document.body.classList.contains("dark");
+
+      byId("loginThemeButton").textContent = darkMode
+        ? "☀ Light mode"
+        : "☾ Dark mode";
+
+      byId("dashboardThemeButton").textContent = darkMode
+        ? "☀"
+        : "☾";
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+
+      localStorage.setItem(
+        "zguard_theme",
+        document.body.classList.contains("dark") ? "dark" : "light"
+      );
+
+      syncThemeButtons();
+    }
+
+    function showApp() {
+      byId("loginScreen").classList.add("hidden");
+      byId("appShell").classList.remove("hidden");
+
+      byId("userCopy").innerHTML = `
+        <strong>${user.display_name || user.name}</strong><br>
+        <small>${user.role}</small>
+      `;
+    }
+
+    function showView(viewName) {
+      ["analysis", "alerts", "insights", "profile"].forEach((name) => {
+        byId(`${name}View`).classList.toggle("hidden", name !== viewName);
+      });
+
+      document.querySelectorAll(".nav-button[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === viewName);
+      });
+
+      byId("breadcrumb").textContent =
+        `Workspace / ${viewName.charAt(0).toUpperCase() + viewName.slice(1)}`;
+
+      if (viewName === "alerts") loadAlerts();
+      if (viewName === "insights") loadModelInsights();
+      if (viewName === "profile") loadProfile();
+    }
+
+    async function logout() {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: authHeaders()
+      });
+
+      localStorage.removeItem("zguard_token");
+      localStorage.removeItem("zguard_user");
+      location.reload();
+    }
+
+    async function loadAlerts() {
+      const response = await fetch("/api/alerts", { headers: authHeaders() });
+      const data = await response.json();
+      const alerts = data.alerts || [];
+
+      byId("alertsEmpty").classList.toggle("hidden", alerts.length > 0);
+      byId("alertsBody").innerHTML = alerts.map((alert) => `
+        <tr>
+          <td>${alert.id}</td>
+          <td>${alert.card_id}</td>
+          <td>${alert.merchant}</td>
+          <td>₹${Number(alert.amount).toLocaleString("en-IN")}</td>
+          <td>${Math.round(alert.risk_score * 100)}%</td>
+          <td>
+            <select onchange="changeAlertStatus('${alert.id}', this.value)">
+              ${["Open", "Under review", "Cleared", "Escalated"].map((status) => `
+                <option value="${status}" ${alert.status === status ? "selected" : ""}>
+                  ${status}
+                </option>
+              `).join("")}
+            </select>
+          </td>
+          <td>${alert.created_at}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function changeAlertStatus(alertId, status) {
+      await fetch(`/api/alerts/${alertId}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ status })
+      });
+
+      loadAlerts();
+    }
+
+    async function loadModelInsights() {
+      const response = await fetch("/api/model-insights", {
+        headers: authHeaders()
+      });
+
+      const data = await response.json();
+
+      byId("modelInsightsContent").innerHTML = `
+        <div class="insight-card">
+          <h3>${data.model}</h3>
+          <p><b>Environment:</b> ${data.environment}</p>
+          <p><b>Decision threshold:</b> ${data.threshold}</p>
+          <p><b>Explanation method:</b> ${data.explanation_method}</p>
+          <p>${data.note}</p>
+        </div>
+
+        <div class="feature-grid" style="margin-top:16px">
+          ${data.features.map((feature) => `
+            <div class="insight-card">
+              <h3>${feature.name}</h3>
+              <p>${feature.description}</p>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function setProfileEditing(enabled) {
+      profileEditing = enabled;
+      byId("profileDisplayName").disabled = !enabled;
+      byId("profileTeam").disabled = !enabled;
+      byId("editProfileButton").textContent = enabled ? "Cancel" : "Edit profile";
+      byId("saveProfileButton").classList.toggle("hidden", !enabled);
+    }
+
+    async function loadProfile() {
+      const response = await fetch("/api/profile", { headers: authHeaders() });
+      const profile = await response.json();
+
+      byId("profileDisplayName").value = profile.display_name;
+      byId("profilePersonalId").value = profile.personal_id;
+      byId("profileRole").value = profile.role;
+      byId("profileTeam").value = profile.team;
+
+      setProfileEditing(false);
+    }
+
+    function toggleChat() {
+      byId("chatWindow").classList.toggle("open");
+    }
+
+    function openChat() {
+      byId("chatWindow").classList.add("open");
+    }
+
+    if (localStorage.getItem("zguard_theme") === "dark") {
+      document.body.classList.add("dark");
+    }
+
+    syncThemeButtons();
+async function restoreSession() {
+  if (!token || !user) {
+    return;
+  }
+
+  const response = await fetch("/api/profile", {
+    headers: authHeaders()
+  });
+
+  if (!response.ok) {
+    localStorage.removeItem("zguard_token");
+    localStorage.removeItem("zguard_user");
+    token = null;
+    user = null;
+    return;
+  }
+
+  const profile = await response.json();
+
+  user = {
+    ...user,
+    ...profile
+  };
+
+  localStorage.setItem("zguard_user", JSON.stringify(user));
+  showApp();
+}
+
+restoreSession();
+
+    document.querySelectorAll(".nav-button[data-view]").forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.view));
+    });
+
+    byId("loginForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = byId("scoreButton");
+      button.disabled = true;
+      button.textContent = "Analysing...";        
+
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personal_id: byId("personalId").value,
+          password: byId("password").value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        byId("loginError").textContent = data.detail || "Unable to sign in.";
+        return;
+      }
+
+      token = data.access_token;
+      user = data.user;
+
+      localStorage.setItem("zguard_token", token);
+      localStorage.setItem("zguard_user", JSON.stringify(user));
+
+      showApp();
+    });
+
+  byId("scoreForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const button = byId("scoreButton");
+
+  button.disabled = true;
+  button.textContent = "Analysing...";
+
+  const payload = {
+    card_id: byId("cardId").value,
+    amount: Number(byId("amount").value),
+    merchant: byId("merchant").value,
+    country: byId("country").value,
+    hour: Number(byId("hour").value),
+    transactions_last_10_min: Number(byId("transactionCount").value),
+    average_card_amount: Number(byId("averageAmount").value),
+    is_new_merchant: byId("newMerchant").checked
+  };
+
+  try {
+    const response = await fetch("/score-transaction", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (response.status === 401) {
+      localStorage.removeItem("zguard_token");
+      localStorage.removeItem("zguard_user");
+
+      alert("Your session expired. Please sign in again.");
+      location.reload();
+      return;
+    }
+
+    if (!response.ok) {
+      alert(data.detail || "Unable to score this transaction.");
+      return;
+    }
+
+    const score = Math.round(data.fraud_risk_score * 100);
+    const signals = data.top_verified_features || [];
+
+    byId("resultEmpty").classList.add("hidden");
+    byId("resultCard").classList.remove("hidden");
+
+    const status = byId("resultStatus");
+
+    status.textContent = data.flagged
+      ? "Flagged for review"
+      : "No alert raised";
+
+    status.className = data.flagged
+      ? "status flagged"
+      : "status safe";
+
+    byId("riskScore").textContent = `Risk score: ${score}%`;
+    byId("resultMeta").textContent =
+      `${data.card_id} · ${data.merchant}`;
+
+    byId("signals").innerHTML = signals.length
+      ? signals.map((signal) => `
+          <div class="signal">${signal}</div>
+        `).join("")
+      : `<p class="subtitle">
+           No high-risk feature signals detected.
+         </p>`;
+
+    if (data.flagged) {
+      loadAlerts();
+    }
+  } catch (error) {
+    alert("Unable to reach the fraud API.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Analyse transaction";
+  }
+});
+
+    byId("editProfileButton").addEventListener("click", () => {
+      if (profileEditing) {
+        loadProfile();
+      } else {
+        setProfileEditing(true);
+      }
+    });
+
+    byId("profileForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          display_name: byId("profileDisplayName").value,
+          team: byId("profileTeam").value
+        })
+      });
+
+      if (!response.ok) {
+        alert("Unable to save profile changes.");
+        return;
+      }
+
+      const profile = await response.json();
+
+      user.display_name = profile.display_name;
+      user.name = profile.name;
+      user.team = profile.team;
+
+      localStorage.setItem("zguard_user", JSON.stringify(user));
+      showApp();
+      setProfileEditing(false);
+    });
+
+    byId("chatForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const input = byId("chatInput");
+      const message = input.value.trim();
+
+      if (!message) return;
+
+      byId("messages").insertAdjacentHTML(
+        "beforeend",
+        `<div class="bubble user-message">${message}</div>`
+      );
+
+      input.value = "";
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ message })
+      });
+
+const data = await response.json();
+
+const reply = response.ok
+  ? (data.reply || data.answer)
+  : (data.detail || "Your session expired. Please sign in again.");
+
+byId("messages").insertAdjacentHTML(
+  "beforeend",
+  `<div class="bubble bot-message"></div>`
+);
+
+byId("messages").lastElementChild.textContent = reply;
+      byId("messages").scrollTop = byId("messages").scrollHeight;
+    });
   </script>
 </body>
 </html>

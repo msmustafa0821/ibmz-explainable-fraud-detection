@@ -66,9 +66,26 @@ def score_transaction(tx: dict) -> dict:
     risk_score = round(risk_score, 2)
 
     verified_features = get_verified_features(tx, features)
-    flagged = risk_score >= 0.50
 
-    if flagged and verified_features:
+    # The model probability is the primary decision signal.  A transaction
+    # with several independently verified extreme signals is escalated even
+    # when its probability lands narrowly below the model threshold.
+    escalation_rule_matched = (
+        features["amount_ratio"] > 5
+        and features["is_new_merchant"] == 1
+        and features["transactions_last_10_min"] >= 4
+        and features["is_overnight"] == 1
+    )
+    flagged = risk_score >= 0.50 or escalation_rule_matched
+
+    if escalation_rule_matched and risk_score < 0.50:
+        explanation = (
+            "Flagged for analyst review by the verified escalation rule. "
+            "The XGBoost model risk score is below the automatic model "
+            "threshold, but all four high-risk signals are present: "
+            + " ".join(verified_features)
+        )
+    elif flagged and verified_features:
         explanation = (
             "Flagged for analyst review. Verified risk signals: "
             + " ".join(verified_features)
@@ -87,6 +104,7 @@ def score_transaction(tx: dict) -> dict:
     return {
         "fraud_risk_score": risk_score,
         "flagged": flagged,
+        "escalation_rule_matched": escalation_rule_matched,
         "top_verified_features": verified_features,
         "analyst_explanation": explanation,
     }
