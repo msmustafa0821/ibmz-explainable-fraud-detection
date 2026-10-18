@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.scoring import score_transaction
@@ -7,6 +10,8 @@ app = FastAPI(
     title="Explainable Real-Time Card Fraud Detection",
     description="Fraud detection designed for deployment inside the IBM LinuxONE trust boundary.",
 )
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 class Transaction(BaseModel):
@@ -20,7 +25,12 @@ class Transaction(BaseModel):
     is_new_merchant: bool = False
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
+def dashboard():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/health")
 def health_check():
     return {
         "status": "running",

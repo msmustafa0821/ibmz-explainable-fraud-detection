@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZGuard | Fraud Analyst Console</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0e1b2e;
+      --border: #263a55;
+      --text: #eaf2ff;
+      --muted: #9dafc7;
+      --blue: #41a7ff;
+      --red: #ff5c70;
+      --green: #45d89b;
+      --amber: #ffbc4d;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(circle at top right, #16335a, var(--bg) 45%);
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 7%;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 { margin: 0; font-size: 24px; }
+    .subtitle, .small { color: var(--muted); }
+    .badge {
+      color: var(--green);
+      background: #102f2a;
+      border: 1px solid #27735f;
+      border-radius: 20px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    main {
+      width: min(1100px, 90%);
+      margin: 35px auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    .card {
+      background: rgba(14, 27, 46, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 25px;
+    }
+
+    h2 { margin-top: 0; font-size: 19px; }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      background: #081321;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px;
+    }
+
+    .check-row {
+      margin: 17px 0;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 13px;
+      background: linear-gradient(90deg, #2e8fe4, #41a7ff);
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 80px 15px;
+    }
+
+    .result { display: none; }
+    .risk {
+      font-size: 52px;
+      font-weight: bold;
+      margin: 12px 0 5px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .flagged { background: #49212a; color: var(--red); }
+    .safe { background: #123429; color: var(--green); }
+
+    .reason {
+      margin: 10px 0;
+      padding: 12px;
+      border-left: 3px solid var(--amber);
+      background: #152339;
+      color: #d9e6f7;
+      font-size: 14px;
+    }
+
+    .explanation {
+      margin-top: 20px;
+      background: #091525;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 14px;
+      line-height: 1.5;
+      color: #d9e6f7;
+    }
+
+    footer {
+      width: min(1100px, 90%);
+      margin: 0 auto 30px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; }
+      .field-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>ZGuard Fraud Analyst Console</h1>
+      <div class="subtitle">Explainable real-time card fraud detection</div>
+    </div>
+    <div class="badge">● Running on IBM LinuxONE</div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Score a transaction</h2>
+
+      <div class="field-grid">
+        <div>
+          <label>Card ID</label>
+          <input id="card_id" value="CARD-001" />
+        </div>
+        <div>
+          <label>Amount (₹)</label>
+          <input id="amount" type="number" value="2500" />
+        </div>
+        <div>
+          <label>Merchant</label>
+          <input id="merchant" value="Unknown Electronics Store" />
+        </div>
+        <div>
+          <label>Country</label>
+          <input id="country" value="IN" />
+        </div>
+        <div>
+          <label>Transaction hour (0–23)</label>
+          <input id="hour" type="number" min="0" max="23" value="2" />
+        </div>
+        <div>
+          <label>Transactions in last 10 minutes</label>
+          <input id="transaction_count" type="number" value="5" />
+        </div>
+        <div>
+          <label>Cardholder average amount (₹)</label>
+          <input id="average_amount" type="number" value="120" />
+        </div>
+      </div>
+
+      <div class="check-row">
+        <input id="new_merchant" type="checkbox" checked />
+        <label for="new_merchant">New merchant for this cardholder</label>
+      </div>
+
+      <button onclick="scoreTransaction()">Analyse transaction</button>
+    </section>
+
+    <section class="card">
+      <div id="empty" class="empty">
+        Submit a transaction to receive a verified, analyst-ready explanation.
+      </div>
+
+      <div id="result" class="result">
+        <div class="small">XGBoost fraud risk score</div>
+        <div id="risk" class="risk"></div>
+        <div id="status" class="status"></div>
+
+        <h2>Verified risk signals</h2>
+        <div id="reasons"></div>
+
+        <div class="explanation">
+          <strong>Analyst explanation</strong>
+          <div id="explanation" style="margin-top: 8px;"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Sensitive transaction data remains inside the LinuxONE trust boundary. Explanations are limited to verified model input features.
+  </footer>
+
+  <script>
+    async function scoreTransaction() {
+      const button = document.querySelector("button");
+      button.textContent = "Analysing...";
+      button.disabled = true;
+
+      const payload = {
+        card_id: document.getElementById("card_id").value,
+        amount: Number(document.getElementById("amount").value),
+        merchant: document.getElementById("merchant").value,
+        country: document.getElementById("country").value,
+        hour: Number(document.getElementById("hour").value),
+        transactions_last_10_min: Number(document.getElementById("transaction_count").value),
+        average_card_amount: Number(document.getElementById("average_amount").value),
+        is_new_merchant: document.getElementById("new_merchant").checked
+      };
+
+      try {
+        const response = await fetch("/score-transaction", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        document.getElementById("empty").style.display = "none";
+        document.getElementById("result").style.display = "block";
+        document.getElementById("risk").textContent =
+          `${Math.round(data.fraud_risk_score * 100)}%`;
+
+        const status = document.getElementById("status");
+        status.textContent = data.flagged ? "FLAGGED FOR REVIEW" : "NO ALERT";
+        status.className = `status ${data.flagged ? "flagged" : "safe"}`;
+
+        document.getElementById("reasons").innerHTML =
+          data.top_verified_features.length
+            ? data.top_verified_features.map(reason =>
+                `<div class="reason">${reason}</div>`).join("")
+            : "<div class='small'>No high-risk feature signals were detected.</div>";
+
+        document.getElementById("explanation").textContent =
+          data.analyst_explanation;
+      } catch (error) {
+        alert("Unable to reach the fraud API. Check that the LinuxONE service is running.");
+      } finally {
+        button.textContent = "Analyse transaction";
+        button.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
