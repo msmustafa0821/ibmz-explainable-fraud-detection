@@ -882,35 +882,36 @@
     }
 
     syncThemeButtons();
-async function restoreSession() {
-  if (!token || !user) {
-    return;
-  }
 
-  const response = await fetch("/api/profile", {
-    headers: authHeaders()
-  });
+    async function restoreSession() {
+      if (!token || !user) {
+        return;
+      }
 
-  if (!response.ok) {
-    localStorage.removeItem("zguard_token");
-    localStorage.removeItem("zguard_user");
-    token = null;
-    user = null;
-    return;
-  }
+      const response = await fetch("/api/profile", {
+        headers: authHeaders()
+      });
 
-  const profile = await response.json();
+      if (!response.ok) {
+        localStorage.removeItem("zguard_token");
+        localStorage.removeItem("zguard_user");
+        token = null;
+        user = null;
+        return;
+      }
 
-  user = {
-    ...user,
-    ...profile
-  };
+      const profile = await response.json();
 
-  localStorage.setItem("zguard_user", JSON.stringify(user));
-  showApp();
-}
+      user = {
+        ...user,
+        ...profile
+      };
 
-restoreSession();
+      localStorage.setItem("zguard_user", JSON.stringify(user));
+      showApp();
+    }
+
+    restoreSession();
 
     document.querySelectorAll(".nav-button[data-view]").forEach((button) => {
       button.addEventListener("click", () => showView(button.dataset.view));
@@ -918,9 +919,6 @@ restoreSession();
 
     byId("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const button = byId("scoreButton");
-      button.disabled = true;
-      button.textContent = "Analysing...";        
 
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -947,86 +945,86 @@ restoreSession();
       showApp();
     });
 
-  byId("scoreForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
+    byId("scoreForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-  const button = byId("scoreButton");
+      const button = byId("scoreButton");
 
-  button.disabled = true;
-  button.textContent = "Analysing...";
+      button.disabled = true;
+      button.textContent = "Analysing...";
 
-  const payload = {
-    card_id: byId("cardId").value,
-    amount: Number(byId("amount").value),
-    merchant: byId("merchant").value,
-    country: byId("country").value,
-    hour: Number(byId("hour").value),
-    transactions_last_10_min: Number(byId("transactionCount").value),
-    average_card_amount: Number(byId("averageAmount").value),
-    is_new_merchant: byId("newMerchant").checked
-  };
+      const payload = {
+        card_id: byId("cardId").value,
+        amount: Number(byId("amount").value),
+        merchant: byId("merchant").value,
+        country: byId("country").value,
+        hour: Number(byId("hour").value),
+        transactions_last_10_min: Number(byId("transactionCount").value),
+        average_card_amount: Number(byId("averageAmount").value),
+        is_new_merchant: byId("newMerchant").checked
+      };
 
-  try {
-    const response = await fetch("/score-transaction", {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify(payload)
+      try {
+        const response = await fetch("/score-transaction", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          localStorage.removeItem("zguard_token");
+          localStorage.removeItem("zguard_user");
+
+          alert("Your session expired. Please sign in again.");
+          location.reload();
+          return;
+        }
+
+        if (!response.ok) {
+          alert(data.detail || "Unable to score this transaction.");
+          return;
+        }
+
+        const score = Math.round(data.fraud_risk_score * 100);
+        const signals = data.top_verified_features || [];
+
+        byId("resultEmpty").classList.add("hidden");
+        byId("resultCard").classList.remove("hidden");
+
+        const status = byId("resultStatus");
+
+        status.textContent = data.flagged
+          ? "Flagged for review"
+          : "No alert raised";
+
+        status.className = data.flagged
+          ? "status flagged"
+          : "status safe";
+
+        byId("riskScore").textContent = `Risk score: ${score}%`;
+        byId("resultMeta").textContent =
+          `${data.card_id} · ${data.merchant}`;
+
+        byId("signals").innerHTML = signals.length
+          ? signals.map((signal) => `
+              <div class="signal">${signal}</div>
+            `).join("")
+          : `<p class="subtitle">
+               No high-risk feature signals detected.
+             </p>`;
+
+        if (data.flagged) {
+          loadAlerts();
+        }
+      } catch (error) {
+        alert("Unable to reach the fraud API.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Analyse transaction";
+      }
     });
-
-    const data = await response.json();
-
-    if (response.status === 401) {
-      localStorage.removeItem("zguard_token");
-      localStorage.removeItem("zguard_user");
-
-      alert("Your session expired. Please sign in again.");
-      location.reload();
-      return;
-    }
-
-    if (!response.ok) {
-      alert(data.detail || "Unable to score this transaction.");
-      return;
-    }
-
-    const score = Math.round(data.fraud_risk_score * 100);
-    const signals = data.top_verified_features || [];
-
-    byId("resultEmpty").classList.add("hidden");
-    byId("resultCard").classList.remove("hidden");
-
-    const status = byId("resultStatus");
-
-    status.textContent = data.flagged
-      ? "Flagged for review"
-      : "No alert raised";
-
-    status.className = data.flagged
-      ? "status flagged"
-      : "status safe";
-
-    byId("riskScore").textContent = `Risk score: ${score}%`;
-    byId("resultMeta").textContent =
-      `${data.card_id} · ${data.merchant}`;
-
-    byId("signals").innerHTML = signals.length
-      ? signals.map((signal) => `
-          <div class="signal">${signal}</div>
-        `).join("")
-      : `<p class="subtitle">
-           No high-risk feature signals detected.
-         </p>`;
-
-    if (data.flagged) {
-      loadAlerts();
-    }
-  } catch (error) {
-    alert("Unable to reach the fraud API.");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Analyse transaction";
-  }
-});
 
     byId("editProfileButton").addEventListener("click", () => {
       if (profileEditing) {
@@ -1085,18 +1083,18 @@ restoreSession();
         body: JSON.stringify({ message })
       });
 
-const data = await response.json();
+      const data = await response.json();
 
-const reply = response.ok
-  ? (data.reply || data.answer)
-  : (data.detail || "Your session expired. Please sign in again.");
+      const reply = response.ok
+        ? (data.reply || data.answer)
+        : (data.detail || "Your session expired. Please sign in again.");
 
-byId("messages").insertAdjacentHTML(
-  "beforeend",
-  `<div class="bubble bot-message"></div>`
-);
+      byId("messages").insertAdjacentHTML(
+        "beforeend",
+        `<div class="bubble bot-message"></div>`
+      );
 
-byId("messages").lastElementChild.textContent = reply;
+      byId("messages").lastElementChild.textContent = reply;
       byId("messages").scrollTop = byId("messages").scrollHeight;
     });
   </script>
