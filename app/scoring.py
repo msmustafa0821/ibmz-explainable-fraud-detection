@@ -61,9 +61,9 @@ def score_transaction(tx: dict) -> dict:
         [[features[feature_name] for feature_name in FEATURE_NAMES]]
     )
 
-   matrix = xgb.DMatrix(values, feature_names=FEATURE_NAMES)
-   risk_score = float(model.predict(matrix)[0])
-   risk_score = round(risk_score, 2)
+    matrix = xgb.DMatrix(values, feature_names=FEATURE_NAMES)
+    risk_score = float(model.predict(matrix)[0])
+    risk_score = round(risk_score, 2)
 
     verified_features = get_verified_features(tx, features)
     flagged = risk_score >= 0.50
