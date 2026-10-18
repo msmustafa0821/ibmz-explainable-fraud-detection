@@ -165,6 +165,7 @@
     }
 
     .sidebar {
+      position: relative;
       padding: 24px 16px;
       background: var(--navy);
       color: white;
@@ -605,20 +606,21 @@
                 Submit a transaction to see the risk decision.
               </div>
 
-            <div id="resultCard" class="hidden">
-            <div id="scoreLatency" class="subtitle"></div>
-            <h4>Explanation</h4>
-            <div id="explanationBox" class="signal">Waiting for explanation...</div>
-            <h4>Personal spending</h4>
-            <div id="spendingBox" class="signal"></div>
-            <h4>Reviewer actions</h4>
-            <div id="reviewBox"></div>
+              <div id="resultCard" class="hidden">
                 <div id="resultStatus" class="status"></div>
                 <div id="riskScore"></div>
                 <p id="resultMeta" class="subtitle"></p>
 
                 <h4>Verified risk signals</h4>
                 <div id="signals"></div>
+
+                <div id="scoreLatency" class="subtitle"></div>
+                <h4>Explanation</h4>
+                <div id="explanationBox" class="signal">Waiting for explanation...</div>
+                <h4>Personal spending</h4>
+                <div id="spendingBox" class="signal"></div>
+                <h4>Reviewer actions</h4>
+                <div id="reviewBox"></div>
               </div>
             </section>
           </div>
@@ -721,43 +723,8 @@
     let token = localStorage.getItem("zguard_token");
     let user = JSON.parse(localStorage.getItem("zguard_user") || "null");
     let profileEditing = false;
-    
+
     const byId = (id) => document.getElementById(id);
-    async function pollExplanation(alertId) {
-  const box = byId("explanationBox");
-  box.textContent = "Generating explanation...";
-  for (let i = 0; i < 20; i++) {
-    const res = await fetch(`/api/explanations/${alertId}`, { headers: authHeaders() });
-    const d = await res.json();
-    if (d.status !== "pending") {
-      box.innerHTML = `<b>Status:</b> ${d.status}<br>${d.text}<br>
-        <small>Validation: ${d.validation.valid ? "passed" : "failed"} ·
-        Explanation time: ${d.explain_ms} ms</small>`;
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  box.textContent = "Explanation timed out. Decision is unaffected.";
-}
-
-function renderReviewButtons(alertId) {
-  byId("reviewBox").innerHTML = `
-    <button class="secondary-button" onclick="reviewAlert('${alertId}','mark_for_verification')">Mark for verification</button>
-    <button class="secondary-button" onclick="reviewAlert('${alertId}','confirm_fraud')">Confirm fraud</button>
-    <button class="secondary-button" onclick="reviewAlert('${alertId}','clear')">Clear</button>`;
-}
-
-async function reviewAlert(alertId, action) {
-  const note = prompt("Reason for this decision:") || "";
-  await fetch(`/api/alerts/${alertId}/review`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({ action, note })
-  });
-  alert("Decision recorded in the audit log.");
-  loadAlerts();
-}
-
 
     function authHeaders() {
       return {
@@ -861,6 +828,47 @@ async function reviewAlert(alertId, action) {
         body: JSON.stringify({ status })
       });
 
+      loadAlerts();
+    }
+
+    async function pollExplanation(alertId) {
+      const box = byId("explanationBox");
+      box.textContent = "Generating explanation...";
+
+      for (let i = 0; i < 20; i++) {
+        const res = await fetch(`/api/explanations/${alertId}`, { headers: authHeaders() });
+        const d = await res.json();
+
+        if (d.status !== "pending") {
+          box.innerHTML = `<b>Status:</b> ${d.status}<br>${d.text}<br>
+            <small>Validation: ${d.validation.valid ? "passed" : "failed"} ·
+            Explanation time: ${d.explain_ms} ms</small>`;
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      box.textContent = "Explanation timed out. Decision is unaffected.";
+    }
+
+    function renderReviewButtons(alertId) {
+      byId("reviewBox").innerHTML = `
+        <button class="secondary-button" onclick="reviewAlert('${alertId}','mark_for_verification')">Mark for verification</button>
+        <button class="secondary-button" onclick="reviewAlert('${alertId}','confirm_fraud')">Confirm fraud</button>
+        <button class="secondary-button" onclick="reviewAlert('${alertId}','clear')">Clear</button>`;
+    }
+
+    async function reviewAlert(alertId, action) {
+      const note = prompt("Reason for this decision:") || "";
+
+      await fetch(`/api/alerts/${alertId}/review`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ action, note })
+      });
+
+      alert("Decision recorded in the audit log.");
       loadAlerts();
     }
 
@@ -1057,7 +1065,16 @@ async function reviewAlert(alertId, action) {
                No high-risk feature signals detected.
              </p>`;
 
-        if (data.flagged) {
+        byId("scoreLatency").textContent =
+          `Fraud score returned in ${data.score_latency_ms} ms`;
+
+        byId("spendingBox").textContent = data.personal_spending.flags.length
+          ? data.personal_spending.flags.join(" ")
+          : `Spending looks ${data.personal_spending.status}.`;
+
+        if (data.alert_id) {
+          pollExplanation(data.alert_id);
+          renderReviewButtons(data.alert_id);
           loadAlerts();
         }
       } catch (error) {
@@ -1067,19 +1084,6 @@ async function reviewAlert(alertId, action) {
         button.textContent = "Analyse transaction";
       }
     });
-
-
-    byId("scoreLatency").textContent =
-  `Fraud score returned in ${data.score_latency_ms} ms`;
-
-byId("spendingBox").textContent = data.personal_spending.flags.length
-  ? data.personal_spending.flags.join(" ")
-  : `Spending looks ${data.personal_spending.status}.`;
-
-if (data.alert_id) {
-  pollExplanation(data.alert_id);
-  renderReviewButtons(data.alert_id);
-}
 
     byId("editProfileButton").addEventListener("click", () => {
       if (profileEditing) {
